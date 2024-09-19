@@ -1,7 +1,7 @@
 import pandas as pd
 import re
 
-def baseline_model_keywords(data):
+def baseline_model_keywords(input):
     """
     Baseline model based on hand-crafted rules: keyword matching
     """
@@ -28,17 +28,11 @@ def baseline_model_keywords(data):
             for pattern in patterns:
                 if re.search(pattern, sentence.lower()):
                     return label
-        return 'null'  # Default to 'null' if no keywords match
+        return 'null'
 
-    if isinstance(data, pd.Series):
-        predictions = data.apply(match_keywords)
+    if isinstance(input, pd.Series):
+        predictions = input.apply(match_keywords)
     else:
-        predictions = match_keywords(data)
+        predictions = match_keywords(input)
     
     return predictions
-
-# Example usage with user input
-while True:
-    user_input = input(">")
-    result = baseline_model_keywords(user_input)
-    print(result)

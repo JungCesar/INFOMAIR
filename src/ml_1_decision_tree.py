@@ -2,6 +2,7 @@
 Decision Tree Classifier
 """
 
+# Welcome message
 print("The Decision Tree Classifier is training now...")
 
 # Import necessary libraries
@@ -41,11 +42,6 @@ vectorizer = CountVectorizer()
 
 # Fit and transform X_train to BOW representation
 X_train_bow = vectorizer.fit_transform(X_train)
-# y_train_bow = vectorizer.fit_transform(y_train)
-
-# Convert to array for better readability (optional)
-X_train_bow_array = X_train_bow.toarray()
-# y_train_bow_array = y_train_bow.toarray()
 
 def train_decision_tree_classifier(X_train, y_train):
     """
@@ -64,12 +60,13 @@ def train_decision_tree_classifier(X_train, y_train):
     return classifier
 
 # Train the Decision Tree Classifier
-classifier = train_decision_tree_classifier(X_train_bow_array, y_train)
+classifier = train_decision_tree_classifier(X_train_bow, y_train)
 
-# Example usage with user input
-while True:
-    user_input = input(">")
-    user_input_bow = vectorizer.transform([user_input])
-    result = classifier.predict(user_input_bow)
-    result = label_encoder.inverse_transform(result)
-    print(result)
+# Notify that traing is done
+print("Training is done, you can start using the classifier below.")
+
+# Joblib is a set of tools to provide lightweight pipelining in Python
+import joblib
+
+# Save the classifier to a file
+joblib.dump(classifier, 'models/decision_tree_classifier.joblib')
