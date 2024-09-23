@@ -23,7 +23,7 @@ def match_edit_dist(input_token, preference_keywords, edit_dist_threshold):
     min_dist = 1000.00
 
     for category_token in preference_keywords:
-        edit_dist = lev.distance(input_token, category_token)
+        edit_dist = lev.distance(input_token, str(category_token))
         # print('edit dist ' + str(edit_dist) + ' between ' + category_token + ' and ' + input_token)
         if edit_dist < min_dist and edit_dist <= edit_dist_threshold:
             token_match = category_token
@@ -63,7 +63,7 @@ def get_restaurant(preferences, resaurant_info_df):
         return resaurant_info_df['restaurantname'].tolist()
 
 
-restaurant_database = pd.read_csv("data/restaurant_info.csv")
+restaurant_database = pd.read_csv("../data/restaurant_info.csv")
 preference_categories_dict = initiate_category_dict(restaurant_database)
 preferences_list = extract_preferences("want italian food but also cheap", preference_categories_dict)
 print(get_restaurant(preferences_list, restaurant_database))
