@@ -4,26 +4,21 @@ import random
 
 
 
-#database's restaurant categories
-preference_categories = { 
-    "food"  : ["british", "modern european", "italian", "romanian", "seafood", "chinese",
-    "steakhouse", "asian oriental", "french", "portuguese", "indian", "moroccan",  
-    "vietnamese", "korean", "swiss", "thai", "spanish", "european", "turkish",  
-    "fusion", "tuscan", "polynesian", "african", "mediterranean", "jamaican", 
-    "north american", "gastropub", "australasian", "lebanese", "cuban", 
-    "persian", "japanese", "catalan"], 
+#get every category in the database for food, area and pricerange to try to find matches
+def initiate_category_dict(restaurant_info_df):
 
-    "pricerange" : ["cheap", "moderate", "expensive"],
-
-    "area" : ["north", "south", "east", "west", "centre"]
+    preference_categories = { 
+    "food"  : restaurant_info_df['food'].unique().tolist(),
+    "pricerange" : restaurant_info_df['pricerange'].unique().tolist(),
+    "area" : restaurant_info_df['area'].unique().tolist()
 }
+    return preference_categories
 
 
-#edit distance matching
+#edit distance matching for a single category
 def match_edit_dist(input_token, preference_keywords, edit_dist_threshold):
     #input token is the candidate keyword/preference 
     #db_category is the possible preference category describing food/pricerage/area
-
     token_match = None
     min_dist = 1000.00
 
@@ -37,7 +32,7 @@ def match_edit_dist(input_token, preference_keywords, edit_dist_threshold):
     return token_match
 
 
-def extract_preferences(inform_text):
+def extract_preferences(inform_text, preference_categories_dict):
     #text that is classified as inform will be the input
     #the output is a dictionary in the format of 'preferences' below, with the found preferences per category 
     preferences = {"food": None,
@@ -45,7 +40,7 @@ def extract_preferences(inform_text):
                    "location": None}
     inform_text = inform_text.split()
 
-    for category, keywords in preference_categories.items(): 
+    for category, keywords in preference_categories_dict.items(): 
         for word in inform_text: #iterates every category and sees if a match is found on the keywords 
             # (ask if we can vectorize the words to find synonyms or just settle with edit distance)
             closest_match = match_edit_dist(word, keywords, 1)
@@ -58,6 +53,7 @@ def extract_preferences(inform_text):
 
 def get_restaurant(preferences, resaurant_info_df):
 
+    #lookup to the database for the criteria extracted
     query_string = ' & '.join([f"{key} == '{value}'" for key, value in preferences.items() if value])
     if query_string:
         # print(query_string)
@@ -66,6 +62,8 @@ def get_restaurant(preferences, resaurant_info_df):
         # print('no query')
         return resaurant_info_df['restaurantname'].tolist()
 
-# csv_file = pd.read_csv("data/restaurant_info.csv")
-# preferences_list = extract_preferences("want italian food but also cheap")
-# print(get_restaurant(preferences_list, csv_file))
+
+restaurant_database = pd.read_csv("data/restaurant_info.csv")
+preference_categories_dict = initiate_category_dict(restaurant_database)
+preferences_list = extract_preferences("want italian food but also cheap", preference_categories_dict)
+print(get_restaurant(preferences_list, restaurant_database))
