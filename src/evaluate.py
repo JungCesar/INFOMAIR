@@ -7,6 +7,8 @@ Error analysis: Are there specific dialog acts that are more difficult to classi
 
 - There are some dialog acts that are more difficult to classify, such as "inform" and "request". For example, the utterance "I want a cheap restaurant" can be classified as "inform" or "request". It is hard to classify because it is a request for a cheap restaurant. The same goes for shared utterances between bye and thankyou.
 
+- The assignment description mentions the following: "In case an utterance was labeled with two different dialog acts, only the first dialog act is used as a label. When performing error analysis (see below) this is a possible aspect to take into account." This could be a reason why some dialog acts are more difficult to classify.
+
 Difficult cases: Come up with two types of ‘difficult instances’, for example utterances that are not fluent (e.g. due to speech recognition issues) or the presence of negation (I don’t want an expensive restaurant). For each case, create test instances and evaluate how your systems perform on these cases.
 
 1. "whats"
