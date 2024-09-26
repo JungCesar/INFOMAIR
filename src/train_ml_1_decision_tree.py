@@ -4,7 +4,7 @@ Train the Decision Tree Classifier
 
 from sklearn.tree import DecisionTreeClassifier
 import joblib
-from load_data import load_data
+from load_data import load_and_split_data
 
 
 # Function to train the Decision Tree Classifier
@@ -13,7 +13,7 @@ def train_decision_tree_classifier(data_path, version="original", return_type="d
     Decision Tree Classifier
     """
     # Load data
-    X_train, y_train = load_data(data_path, version, return_type)
+    X_train, y_train, _,_ = load_and_split_data(data_path, version, return_type)
 
     # Creating the Decision Tree Classifier
     classifier = DecisionTreeClassifier()
@@ -26,7 +26,8 @@ def train_decision_tree_classifier(data_path, version="original", return_type="d
 
 
 # Specify data path
-data_path = "data/dialog_acts.dat"
+data_path = "../data/dialog_acts.dat"
+print("yeah")
 
 # Train the Decision Tree Classifier
 classifier = train_decision_tree_classifier(

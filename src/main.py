@@ -1,3 +1,4 @@
+
 from baseline_majority import baseline_model_majority
 from baseline_keywords import baseline_model_keywords
 
@@ -7,6 +8,7 @@ def main():
 
     # Welcome message
     print("Welcome to the restaurant recommendation system!")
+    
 
     # Ask for input, until valid input is given
     while True:
