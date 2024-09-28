@@ -37,7 +37,7 @@ def extract_preferences(inform_text, preference_categories_dict):
     #the output is a dictionary in the format of 'preferences' below, with the found preferences per category 
     preferences = {"food": None,
                    "pricerange": None, 
-                   "location": None}
+                   "area": None}
     inform_text = inform_text.split()
 
     for category, keywords in preference_categories_dict.items(): 
