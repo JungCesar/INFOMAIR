@@ -150,3 +150,52 @@ if __name__ == "__main__":
     print(f"Test set shape: {df_test.shape}")
     print(f"BOW train set shape: {X_train_bow.shape}")
     print(f"BOW test set shape: {X_test.shape}")
+
+
+#### Chris' load data change
+
+def load_data(data_path, drop_duplicates=False):
+    """
+    Load data and give option to how to return it: as a pandas DataFrame or Bag of Words (BOW) representation
+    """
+    import pandas as pd
+    
+    # Open data file in read mode
+    with open(data_path, 'r') as file:
+        # Step 2: Read the content of the file
+        data = file.read().split('\n')
+
+    # Create Pandas DataFrame from the data
+    label = []
+    sentence = []
+    for line in data:
+        if line > '':
+            line = line.split()
+            label.append(line[0])
+            sentence.append(" ".join(line[1:]))
+    #### apply preprocessing    
+    df = pd.DataFrame({'sentence': sentence, 'label': label})
+    if drop_duplicates == True:
+        df = df.drop_duplicates()
+    
+    
+    return df
+    
+
+def bow_descriptors_labels(sentence_label_df, save=False):
+
+
+    label_encoder = LabelEncoder()
+    
+    #transform the labels to numerical values
+    sentence_label_df['numerical_label'] = label_encoder.fit_transform(sentence_label_df['label'])
+
+    #create bow descriptors in sparse form
+    vectorizer = CountVectorizer()
+    X_bow = vectorizer.fit_transform(sentence_label_df["sentence"])
+
+    if save==True:
+        dump(vectorizer, 'models/vectorizer.joblib')
+
+
+    return X_bow, sentence_label_df['numerical_label']
