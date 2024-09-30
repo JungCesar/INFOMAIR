@@ -64,14 +64,14 @@ def query_restaurant(preferences, resaurant_info_df, output = 'list', version ='
     if version == 'eq': #equality filter
         query_string = ' & '.join([f"{key} == '{value}'" for key, value in preferences.items() if value])
     else: #inequality filter
-        query_string = ' & '.join([f"{key} =! '{value}'" for key, value in preferences.items() if value])
+        query_string = ' & '.join([f"{key} != '{value}'" for key, value in preferences.items() if value])
 
     if query_string:
         # print(query_string)
         if output=='list':
             return (resaurant_info_df.query(query_string))['restaurantname'].tolist()
         else:
-            resaurant_info_df = resaurant_info_df.query(query_string)            
+            return resaurant_info_df.query(query_string)            
     else:
         if output=='list':
             return resaurant_info_df['restaurantname'].tolist()
