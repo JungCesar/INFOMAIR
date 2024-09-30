@@ -1,0 +1,53 @@
+{
+    "rules": [
+        {
+            "antecedents": [
+                {"column": "pricerange", "value": "cheap"},
+                {"column": "food_quality", "value": "good food"}
+            ],
+            "consequent": "touristic",
+            "value": true,
+            "priority": 3
+        },
+        {
+            "antecedents": [
+                {"column": "food", "value": "romanian"}
+            ],
+            "consequent": "touristic",
+            "value": false,
+            "priority": 1
+        },
+        {
+            "antecedents": [
+                {"column": "crowdedness", "value": "busy"}
+            ],
+            "consequent": "assigned_seats",
+            "value": true,
+            "priority": 2
+        },
+        {
+            "antecedents": [
+                {"column": "length_of_stay", "value": "long stay"}
+            ],
+            "consequent": "children",
+            "value": false,
+            "priority": 2
+        },
+        {
+            "antecedents": [
+                {"column": "crowdedness", "value": "busy"}
+            ],
+            "consequent": "romantic",
+            "value": false,
+            "priority": 3
+        },
+        {
+            "antecedents": [
+                {"column": "length_of_stay", "value": "long stay"}
+            ],
+            "consequent": "romantic",
+            "value": true,
+            "priority": 2
+        }
+    ]
+}

@@ -1,0 +1,46 @@
+digraph "Restaurant Recommendation System" {
+	nodesep=4 rankdir=TB ranksep=0.2
+	node [shape=box]
+	1 [label="1. welcome"]
+	2 [label="2. ask area"]
+	3 [label="3. ask food type"]
+	4 [label="4. ask price range"]
+	5 [label="5. check restaurant availability"]
+	6 [label="6. offer alternatives"]
+	7 [label="7. provide restaurant details"]
+	8 [label="End Conversation"]
+	node [fillcolor=lightpink shape=ellipse style=filled]
+	i [label="express preferences"]
+	ii [label="reply area"]
+	iii [label="reply food type"]
+	iv [label="reply price range"]
+	v [label="user provides alternative preferences"]
+	node [fillcolor=lightblue shape=diamond style=filled]
+	a [label="area expressed?"]
+	b [label="food kind expressed?"]
+	c [label="price range expressed?"]
+	d [label="restaurant available?"]
+	e [label="user asks for details?"]
+	1 -> i
+	i -> a
+	a -> 2 [label=no]
+	a -> b [label=yes]
+	2 -> ii
+	ii -> b
+	b -> 3 [label=no]
+	b -> c [label=yes]
+	3 -> iii
+	iii -> c
+	c -> 4 [label=no]
+	c -> 5 [label=yes]
+	4 -> iv
+	iv -> 5
+	5 -> d
+	d -> v [label=no]
+	d -> 7 [label=yes]
+	v -> 6
+	6 -> 7
+	7 -> e
+	e -> 7 [label=yes]
+	e -> 8 [label=no]
+}

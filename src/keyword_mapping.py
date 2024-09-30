@@ -35,9 +35,8 @@ def match_edit_dist(input_token, preference_keywords, edit_dist_threshold):
 def extract_preferences(inform_text, preference_categories_dict):
     #text that is classified as inform will be the input
     #the output is a dictionary in the format of 'preferences' below, with the found preferences per category 
-    preferences = {"food": None,
-                   "pricerange": None, 
-                   "location": None}
+    preferences = {category: None for category in preference_categories_dict.keys()}
+    
     inform_text = inform_text.split()
 
     for category, keywords in preference_categories_dict.items(): 
@@ -51,7 +50,7 @@ def extract_preferences(inform_text, preference_categories_dict):
     return preferences
 
 
-def get_restaurant(preferences, resaurant_info_df):
+def query_restaurant(preferences, resaurant_info_df):
 
     #lookup to the database for the criteria extracted
     query_string = ' & '.join([f"{key} == '{value}'" for key, value in preferences.items() if value])
@@ -63,7 +62,7 @@ def get_restaurant(preferences, resaurant_info_df):
         return resaurant_info_df['restaurantname'].tolist()
 
 
-restaurant_database = pd.read_csv("data/restaurant_info.csv")
-preference_categories_dict = initiate_category_dict(restaurant_database)
-preferences_list = extract_preferences("want italian food but also cheap", preference_categories_dict)
-print(get_restaurant(preferences_list, restaurant_database))
+# restaurant_database = pd.read_csv("data/restaurant_info.csv")
+# preference_categories_dict = initiate_category_dict(restaurant_database)
+# preferences_list = extract_preferences("want italian food but also cheap", preference_categories_dict)
+# print(query_restaurant(preferences_list, restaurant_database))
