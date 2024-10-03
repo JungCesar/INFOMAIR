@@ -27,15 +27,15 @@ def start(model):
            
     if label == "inform":
         what = km.extract_preferences(text, preference_categories_dict)
-        if len(what["food"]) != None:
+        if (what["food"]) != None:
                info["food"].append(what["food"])
                print("You asked for ", what["food"])
 
-        if len(what["pricerange"]) != None:
+        if (what["pricerange"]) != None:
                info["pricerange"].append(what["pricerange"])
                print("You asked for ", what["pricerange"])
 
-        if len(what["area"]) != None:
+        if (what["area"]) != None:
                info["area"].append(what["area"])
                print("You asked for ", what["area"])
 
