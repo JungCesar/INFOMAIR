@@ -51,8 +51,9 @@ def start(model):
         askfood()
         askprice()
         asklocation()
-    input2 = f'want {info["food"]} food that is {info["pricerange"]} in the {info["area"]}'
+    input2 = f'want {info["food"][0]} food that is {info["pricerange"][0]} in the {info["area"][0]}'
     preferences_list = km.extract_preferences(input2, preference_categories_dict)
+    print(input2)
     print(km.query_restaurant(preferences_list, restaurant_database))
 
 
