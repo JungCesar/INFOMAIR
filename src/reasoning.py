@@ -21,7 +21,7 @@ added_features = {
     "length_of_stay": ["short stay", "long stay"]
 }
 
-update_restaurant_info(added_features, 'data/restaurant_info.csv')
+update_restaurant_info(added_features, '../data/restaurant_info.csv')
 
 additional_preferences = {
  'romantic' : ['romantic'],
@@ -55,7 +55,7 @@ def inference_rules(add_preferences):
 filters_true, filters_false= inference_rules(selected_added_pref)
 
 
-restaurant_df=pd.read_csv('data/updated_restaurant_info.csv')
+restaurant_df=pd.read_csv('../data/updated_restaurant_info.csv')
 # print(restaurant_df.columns)
 restaurant_df = query_restaurant(filters_true, restaurant_df, output = 'df', version ='eq')
 print(query_restaurant(filters_false, restaurant_df, output = 'list', version ='ineq'))
