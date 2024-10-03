@@ -5,6 +5,11 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder
 from joblib import dump, load
 import os
+import re
+from nltk.stem import WordNetLemmatizer
+import nltk
+from nltk.corpus import stopwords
+
 
 # Get the absolute path of the script
 script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -154,6 +159,28 @@ if __name__ == "__main__":
 
 #### Chris' load data change
 
+nltk.download('wordnet')
+nltk.download('omw-1.4')
+nltk.download('stopwords')
+
+lemmatizer = WordNetLemmatizer()
+
+# general_stopwords = set(stopwords.words('english'))
+
+def preprocess_text(text):
+    # Convert to lowercase
+    text = text.lower()
+    # Remove special characters and numbers
+    text = re.sub(r'[^a-z\s]', '', text)
+    # Remove short words
+    text = re.sub(r'\b\w{1,2}\b', '', text)
+    # Remove stopwords, including domain-specific ones
+    # text = ' '.join([word for word in text.split() if word not in general_stopwords])
+    # Lemmatize the text
+    text = ' '.join([lemmatizer.lemmatize(word) for word in text.split()])
+    return text
+
+
 def load_data(data_path, drop_duplicates=False):
     """
     Load data and give option to how to return it: as a pandas DataFrame or Bag of Words (BOW) representation
@@ -175,15 +202,20 @@ def load_data(data_path, drop_duplicates=False):
             sentence.append(" ".join(line[1:]))
     #### apply preprocessing    
     df = pd.DataFrame({'sentence': sentence, 'label': label})
+    
+    df['sentence'] = df['sentence'].apply(preprocess_text)
+    
     if drop_duplicates == True:
         df = df.drop_duplicates()
     
     
     return df
     
+df = load_data('data/all_dialogs.txt', drop_duplicates=False)
+print(df)
+
 
 def bow_descriptors_labels(sentence_label_df, save=False):
-
 
     label_encoder = LabelEncoder()
     
@@ -196,6 +228,5 @@ def bow_descriptors_labels(sentence_label_df, save=False):
 
     if save==True:
         dump(vectorizer, 'models/vectorizer.joblib')
-
 
     return X_bow, sentence_label_df['numerical_label']
