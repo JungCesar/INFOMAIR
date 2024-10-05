@@ -20,6 +20,11 @@ lemmatizer = WordNetLemmatizer()
 
 # general_stopwords = set(stopwords.words('english'))
 
+
+'''
+after tests i only kept the lowercasing, special characters and lemmatization because
+that is how the model performed best. short word and stopword removal harmed the performance
+'''
 def preprocess_text(text):
     # Convert to lowercase
     text = text.lower()
@@ -36,7 +41,8 @@ def preprocess_text(text):
 
 def load_data(data_path, drop_duplicates=False):
     """
-    Load data and give option to how to return it: as a pandas DataFrame or Bag of Words (BOW) representation
+    Load data data_path:str, drop:duplicates:bool
+    returns df['sentence','label'] with preprocessing as done in preprocess_text()
     """
     
     # Open data file in read mode
@@ -60,23 +66,20 @@ def load_data(data_path, drop_duplicates=False):
 
     print("Class distribution:")
     class_dist = df['label'].value_counts()
-    print(class_dist)        
     problematic_classes = class_dist[class_dist <3].index.tolist()
-    print(problematic_classes)
     if problematic_classes:
         print(f"\nWarning: The following classes have only one sample: {problematic_classes}")
         print("These will be removed to allow stratification.")
         df = df[~df['label'].isin(problematic_classes)]
         print(f"Rows remaining after removal: {len(df)}")
             
-        
+    #apply the preprocessing done in preprocess_text to the sentence column of the df
     df['sentence'] = df['sentence'].apply(preprocess_text)
-    print("Unique labels after processing:")
-    print(df['label'].unique())
-    
 
     return df
     
+
+
 def bow_descriptors_labels(sentence_label_df, save = False, deduplicated = False):
     
     label_encoder = LabelEncoder()
@@ -89,6 +92,7 @@ def bow_descriptors_labels(sentence_label_df, save = False, deduplicated = False
     vectorizer = CountVectorizer()
     X_bow = vectorizer.fit_transform(sentence_label_df["sentence"])
 
+    #save both the duplicated and deduplicated vectorizer
     if save==True:
         if deduplicated==False:     
             dump(vectorizer, 'src/models/vectorizer.joblib')

@@ -10,6 +10,8 @@ from sklearn.metrics import classification_report, accuracy_score, confusion_mat
 import joblib
 
 
+# first i create the functions for each classifier that return a trained model
+
 def svm_classifier(X_train, y_train):
     svm = SVC(kernel= 'linear', C=1 , decision_function_shape='ovr', random_state=1)
     # svm = SVC(kernel= 'linear', C=10, decision_function_shape='ovr', random_state=1)
@@ -30,15 +32,19 @@ def logistic_regression(X_train, y_train):
     log_reg.fit(X_train, y_train)
     return log_reg
 
+
+
+#the i create the classifier function that will train the model, test it, and optionally save it
+
 def classfier(choice, X_train, y_train, X_test, y_test, metrics = True, save_model= False): 
     '''
     inputs:
     choice: str ['svm', 'tree', 'logreg']
     X_train, y_train, X_Test, y_test: array
     metrics: bool, True to display classification report, confusion matrix and accuracy score
-    save_model_loc: str: if None, it doesn't save the model. if str, it saves it to the location   
-                         models/-chosen name-.joblib
+    save_model: bool: whether the model will be saved in the location spacified in the code
     '''
+
     if choice == 'svm':
         classifier = svm_classifier(X_train, y_train)
     elif choice == 'tree':
@@ -58,6 +64,7 @@ def classfier(choice, X_train, y_train, X_test, y_test, metrics = True, save_mod
         print("\nClassification Report:")
         print(classification_report(y_test, y_pred))
 
+        # you can comment below out to plot the confusion matrix
         # Plot confusion matrix
         # cm = confusion_matrix(y_test, y_pred)
         # plt.figure(figsize=(10, 8))
@@ -75,11 +82,14 @@ def classfier(choice, X_train, y_train, X_test, y_test, metrics = True, save_mod
 
 
 for drop_duplicates in [False, True]:
+    #first, loop for duplicated or not and get the dataframe of the sentence/label and the descriptors 
         sentence_label_df = load_data('./data/dialog_acts.dat', drop_duplicates=drop_duplicates)
         X, y = bow_descriptors_labels(sentence_label_df, deduplicated=drop_duplicates, save = True)
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.20, random_state=1, stratify=y)
 
+    #then run every model. we only save the model for the dataframe without the deduplication, because
+    #that is when we saw that it performs best
         for classifier_type in ['svm', 'tree', 'logreg']:
-            X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.20, random_state=1, stratify=y)
             classfier_1 = classfier(classifier_type, X_train, y_train, X_test, y_test, metrics = True, save_model= not drop_duplicates)
 
 
