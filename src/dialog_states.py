@@ -16,6 +16,7 @@ model = jl.load("models/logistic_regression_classifier.joblib")
 vectorizer = jl.load("models/logistic_regression_classifier_vectorizer.joblib")
 restaurant_database = pd.read_csv("../data/restaurant_info.csv")
 preference_categories_dict = km.initiate_category_dict(restaurant_database)
+hadpreferences = []
 #ex = "hello"
 #tex = vectorizer.transform([ex])
 #print(model.predict(tex))
@@ -27,15 +28,15 @@ def start(model):
            
     if label == "inform":
         what = km.extract_preferences(text, preference_categories_dict)
-        if len(what["food"]) != None:
+        if (what["food"]) != None:
                info["food"].append(what["food"])
                print("You asked for ", what["food"])
 
-        if len(what["pricerange"]) != None:
+        if (what["pricerange"]) != None:
                info["pricerange"].append(what["pricerange"])
                print("You asked for ", what["pricerange"])
 
-        if len(what["area"]) != None:
+        if (what["area"]) != None:
                info["area"].append(what["area"])
                print("You asked for ", what["area"])
 
@@ -51,10 +52,25 @@ def start(model):
         askfood()
         askprice()
         asklocation()
-    input2 = f'want {info["food"]} food that is {info["pricerange"]} in the {info["area"]}'
+    print("If you would like to make any changes, state them now.")
+    input3 = km.extract_preferences(input(), preference_categories_dict)
+    change(input3)
+    input2 = f'want {info["food"][0]} food that is {info["pricerange"][0]} in the {info["area"][0]}'
     preferences_list = km.extract_preferences(input2, preference_categories_dict)
+    #print(input2)
     print(km.query_restaurant(preferences_list, restaurant_database))
 
+def change(what):
+    if (what["food"]) != None:
+        print("You changed", info["food"][0], "for", what["food"])
+        info["food"][0] = what["food"]
+    if (what["pricerange"]) != None:
+        print("You changed", info["pricerange"][0], "for", what["pricerange"])
+        info["pricerange"][0] = what["pricerange"]
+    if (what["area"]) != None:
+        print("You changed", info["area"][0], "for", what["area"])
+        info["area"][0] = what["area"]
+        
 
 def askfood():
     print("What type of food do you want?")
@@ -66,6 +82,7 @@ def askfood():
         if what["food"] != None:
                info["food"].append(what["food"])
                print("You asked for ", what["food"])
+        
         else:
             print("answer the question")
             askfood()
@@ -82,8 +99,11 @@ def askprice():
     if label == "inform":
         what = km.extract_preferences(text, preference_categories_dict)
         if what["pricerange"] != None:
+
                info["pricerange"].append(what["pricerange"])
                print("You asked for ", what["pricerange"])
+    
+                
         else:
             print("answer the question")
             askprice()
@@ -98,8 +118,11 @@ def asklocation():
     if label == "inform":
         what = km.extract_preferences(text, preference_categories_dict)
         if what["area"] != None:
+            if len(info["area"]) == 0:
+
                info["area"].append(what["area"])
                print("You asked for ", what["area"])
+                
         else:
             print("answer the question")
             asklocation()

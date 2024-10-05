@@ -3,7 +3,6 @@ import csv
 import pandas as pd
 import os
 from keyword_mapping import extract_preferences, query_restaurant
-from load_data import load_data
 
 def update_restaurant_info(added_features_dict, restaurant_info_path):
     df = pd.read_csv(restaurant_info_path)
@@ -52,10 +51,8 @@ def inference_rules(add_preferences):
     
     return filters_true, filters_false
 
-filters_true, filters_false= inference_rules(selected_added_pref)
-
-
-restaurant_df=pd.read_csv('data/updated_restaurant_info.csv')
-# print(restaurant_df.columns)
-restaurant_df = query_restaurant(filters_true, restaurant_df, output = 'df', version ='eq')
-print(query_restaurant(filters_false, restaurant_df, output = 'list', version ='ineq'))
+# filters_true, filters_false= inference_rules(selected_added_pref)
+# restaurant_df=pd.read_csv('data/updated_restaurant_info.csv')
+# # print(restaurant_df.columns)
+# restaurant_df = query_restaurant(filters_true, restaurant_df, output = 'df', version ='eq')
+# print(query_restaurant(filters_false, restaurant_df, output = 'list', version ='ineq'))
