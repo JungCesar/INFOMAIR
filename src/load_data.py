@@ -1,9 +1,7 @@
 import pandas as pd
-import numpy as np
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.preprocessing import LabelEncoder
 from joblib import dump
-import os
 import re
 from nltk.stem import WordNetLemmatizer
 import nltk

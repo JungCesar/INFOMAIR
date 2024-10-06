@@ -73,9 +73,8 @@ def query_restaurant(preferences, resaurant_info_df, output = 'list', version ='
         query_string = ' & '.join([f"{key} == '{value}'" for key, value in preferences.items() if value and value != "any"])
     else: #inequality filter
         query_string = ' & '.join([f"{key} != '{value}'" for key, value in preferences.items() if value and value != "any"])
-
+    
     if query_string:
-        # print(query_string)
         if output=='list':
             return (resaurant_info_df.query(query_string))['restaurantname'].tolist()
         else:

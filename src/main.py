@@ -6,10 +6,10 @@ import reasoning as reas
 import pyttsx3
 
 sys_configs = {
-    "EARLY_SUGGESTIONS" : True,
+    "EARLY_SUGGESTIONS" : False,
     "USE_LEVENSHTEIN" : True,
     "ALLOW_CHANGE_PREF" : True,
-    "PRINT_AND_SPEAK" : True
+    "PRINT_AND_SPEAK" : False
 }
 
 
@@ -83,12 +83,14 @@ def is_category_filled(key):
     return bool(user_preferences.get(key))
 
 
-def give_suggestion(subset, backup_subset, speak): 
+def give_suggestion(subset, backup_subset, inferred_reason, speak, additional_preferences= {}): 
+    additional_preferences_provided = any(additional_preferences.values())
     if subset is None or subset.empty:
         if backup_subset is not None and not backup_subset.empty:
             name = backup_subset["restaurantname"].iloc[0] 
-            print_and_speak( "No restaurants match the given additional preferences. \
-               We will attempt to relax the additional preferences and suggest a restaurant without them.", speak)
+            if additional_preferences_provided:
+                print_and_speak( "No restaurants match the given additional preferences. \
+                    We will attempt to relax the additional preferences and suggest a restaurant without them.", speak)
             print_and_speak( "I would like to propose " + name +". It has "+ backup_subset["food"].iloc[0]\
                 + " food, "+ backup_subset["pricerange"].iloc[0] +" prices and is located in the "+ backup_subset["area"].iloc[0] + ".", speak)
         else:
@@ -97,7 +99,7 @@ def give_suggestion(subset, backup_subset, speak):
     else:    
         name = subset["restaurantname"].iloc[0] 
         print_and_speak( "I would like to propose " + name +". It has "+ subset["food"].iloc[0]\
-            + " food, "+ subset["pricerange"].iloc[0] +" prices and is located in the "+ subset["area"].iloc[0] + ".", speak)
+            + " food, "+ subset["pricerange"].iloc[0] +" prices and is located in the "+ subset["area"].iloc[0] + ". " + inferred_reason, speak)
         
     print_and_speak( "Are you okay with the aforementioned suggestion?", speak)
     text = input().lower()
@@ -115,7 +117,7 @@ def confirm_preferences(configurations):
     if user_preferences["pricerange"]:
         recap_string += "-" + user_preferences["pricerange"]+ " prices.\n"
     if user_preferences["area"]:
-        recap_string += "-location in the " + user_preferences["area"]+ ".\n"
+        recap_string += "-location in the " + user_preferences["area"]+ "."
     speak=  configurations["PRINT_AND_SPEAK"]
     print_and_speak(recap_string, speak)
     if configurations['ALLOW_CHANGE_PREF'] == True:
@@ -131,7 +133,7 @@ def offer_early_suggestions(user_preferences, restaurant_db ,configurations):
             any(value not in [None, "any"] for value in user_preferences.values()):
         
         restaurant_subset = km.query_restaurant(user_preferences, restaurant_db, output='df', version='eq')
-        agreement, restaurant_name = give_suggestion(restaurant_subset, restaurant_subset, configurations["PRINT_AND_SPEAK"])
+        agreement, restaurant_name = give_suggestion(restaurant_subset, restaurant_subset, "", configurations["PRINT_AND_SPEAK"])
         if agreement:
             print_and_speak( "I hope you enjoy your time in " + restaurant_name, configurations['PRINT_AND_SPEAK'])
             return True, restaurant_db 
@@ -151,7 +153,7 @@ def state_transition_function(configurations):
     text = input().lower()
     label = classify_input(text)
     if label != 6:
-        text = ask_preference("food", speak)
+        text = ask_preference("food", "", speak)
     
     if text == "any":
         user_preferences["food"] = "any"
@@ -186,7 +188,7 @@ def state_transition_function(configurations):
         
         
     while not is_category_filled("area") :
-        text = ask_preference("area", addition = expressed_preference + " Would you like the restaurant to be in the north, center, south or west? ", speak=speak)
+        text = ask_preference("area", addition = expressed_preference + " Would you like the restaurant to be in the north, south, center, east or west? ", speak=speak)
         if text == "any":
             user_preferences["area"] = "any"
             print_and_speak( "You indicated that you have no particular preference for the location.", speak)
@@ -204,29 +206,27 @@ def state_transition_function(configurations):
     text = input().lower()
     label= classify_input(text)
 
-    if label in [4, 7, 13] or text in ["none", "any"]:
+    if label in [4, 7, 13] or text in ["none", "no", "any"]:
         print_and_speak( "You indicated that you have no additional preferences.",speak)
         selected_added_pref = {}
-        filters_true, filters_false = {}, {}  
+        filters_true, filters_false, inferred_reason= {}, {}, "" 
     else:    
         selected_added_pref = km.extract_preferences(text, additional_preferences, configurations["USE_LEVENSHTEIN"])
 
         if any(selected_added_pref.values()):  
-            filters_true, filters_false = reas.inference_rules(selected_added_pref)
+            filters_true, filters_false, inferred_reason = reas.inference_rules(selected_added_pref)
         else:
             while True:
                 print_and_speak( "No valid preferences were found. Please specify the additional requirements. Or type 'any' to move on.", speak)
                 text = input().lower()
                 if text == "any":
-                    filters_true, filters_false = {}, {}
+                    filters_true, filters_false, inferred_reason = {}, {}, ''
                     break  
 
                 selected_added_pref = km.extract_preferences(text, additional_preferences, configurations["USE_LEVENSHTEIN"])
                 if any(selected_added_pref.values()):  
-                    filters_true, filters_false = reas.inference_rules(selected_added_pref)
+                    filters_true, filters_false, inferred_reason = reas.inference_rules(selected_added_pref)
                     break
-
-
 
     #user preferences query
     restaurant_subset_1 = km.query_restaurant(user_preferences, restaurant_db, output = 'df', version ='eq')
@@ -235,7 +235,7 @@ def state_transition_function(configurations):
     #additional preferences - inequality filter
     restaurant_subset= km.query_restaurant(filters_false, restaurant_subset, output = 'df', version ='ineq')
 
-    agreement, restaurant_name = give_suggestion(restaurant_subset, restaurant_subset_1, speak)
+    agreement, restaurant_name = give_suggestion(restaurant_subset, restaurant_subset_1, inferred_reason, speak, filters_true|filters_false)
 
     if agreement==True:
         print_and_speak( "I hope you enjoy your time in " + restaurant_name, speak)
