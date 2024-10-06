@@ -1,20 +1,19 @@
 import pandas as pd
 import numpy as np
 from sklearn.feature_extraction.text import CountVectorizer
-from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder
-from joblib import dump, load
+from joblib import dump
 import os
 import re
 from nltk.stem import WordNetLemmatizer
 import nltk
-from nltk.corpus import stopwords
+# from nltk.corpus import stopwords
 import pandas as pd
 
 
-nltk.download('wordnet')
-nltk.download('omw-1.4')
-nltk.download('stopwords')
+# nltk.download('wordnet')
+# nltk.download('omw-1.4')
+# nltk.download('stopwords')
 
 lemmatizer = WordNetLemmatizer()
 
@@ -64,10 +63,10 @@ def load_data(data_path, drop_duplicates=False):
     if drop_duplicates == True:
         df = df.drop_duplicates()
 
-    print("Class distribution:")
     class_dist = df['label'].value_counts()
-    problematic_classes = class_dist[class_dist <3].index.tolist()
+    problematic_classes = class_dist[class_dist == 1].index.tolist()
     if problematic_classes:
+        print("Class distribution:\n", class_dist)
         print(f"\nWarning: The following classes have only one sample: {problematic_classes}")
         print("These will be removed to allow stratification.")
         df = df[~df['label'].isin(problematic_classes)]
@@ -75,18 +74,18 @@ def load_data(data_path, drop_duplicates=False):
             
     #apply the preprocessing done in preprocess_text to the sentence column of the df
     df['sentence'] = df['sentence'].apply(preprocess_text)
+    
+    
+    label_encoder = LabelEncoder()
+    #transform the labels to numerical values
+    df['numerical_label'] = label_encoder.\
+                                            fit_transform(df['label'])
 
     return df
     
 
 
 def bow_descriptors_labels(sentence_label_df, save = False, deduplicated = False):
-    
-    label_encoder = LabelEncoder()
-    
-    #transform the labels to numerical values
-    sentence_label_df['numerical_label'] = label_encoder.\
-                                            fit_transform(sentence_label_df['label'])
 
     #create bow descriptors in sparse form
     vectorizer = CountVectorizer()
@@ -100,8 +99,6 @@ def bow_descriptors_labels(sentence_label_df, save = False, deduplicated = False
             dump(vectorizer, 'src/models/vectorizer_deduplicated.joblib' )
 
     return X_bow, sentence_label_df['numerical_label']
-
-
 
 
 

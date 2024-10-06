@@ -2,8 +2,8 @@ import random
 import csv
 import pandas as pd
 import os
-from keyword_mapping import extract_preferences, query_restaurant
 
+'''
 def update_restaurant_info(added_features_dict, restaurant_info_path):
     df = pd.read_csv(restaurant_info_path)
     for feature in added_features_dict.keys():
@@ -21,15 +21,16 @@ added_features = {
 }
 
 update_restaurant_info(added_features, 'data/restaurant_info.csv')
+'''
 
-additional_preferences = {
- 'romantic' : ['romantic'],
- 'assigned seats' : ['assigned seats'],
- 'children' : ['children'],
- 'touristic' : ['touristic']
-}
+# additional_preferences = {
+#  'romantic' : ['romantic'],
+#  'assigned seats' : ['assigned seats'],
+#  'children' : ['children'],
+#  'touristic' : ['touristic']
+# }
 
-selected_added_pref = extract_preferences('i would like a romantic restaurant but touristic too', additional_preferences)
+# selected_added_pref = extract_preferences('i would like a romantic restaurant but touristic too', additional_preferences)
 # print(selected_added_pref)
 
 

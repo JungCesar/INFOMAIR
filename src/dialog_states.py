@@ -5,8 +5,8 @@ Created on Thu Sep 26 09:32:50 2024
 @author: lucmi
 """
 info = {"food": [],
-               "pricerange": [], 
-               "area": []}
+        "pricerange": [], 
+        "area": []}
 
 import keyword_mapping as km
 from sklearn.feature_extraction.text import CountVectorizer
