@@ -1,15 +1,107 @@
 import pandas as pd
-import numpy as np
 from sklearn.feature_extraction.text import CountVectorizer
-from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder
-from joblib import dump, load
-import os
+from joblib import dump
 import re
 from nltk.stem import WordNetLemmatizer
 import nltk
-from nltk.corpus import stopwords
+# from nltk.corpus import stopwords
+import pandas as pd
 
+
+# nltk.download('wordnet')
+# nltk.download('omw-1.4')
+# nltk.download('stopwords')
+
+lemmatizer = WordNetLemmatizer()
+
+# general_stopwords = set(stopwords.words('english'))
+
+
+'''
+after tests i only kept the lowercasing, special characters and lemmatization because
+that is how the model performed best. short word and stopword removal harmed the performance
+'''
+def preprocess_text(text):
+    # Convert to lowercase
+    text = text.lower()
+    # Remove special characters and numbers
+    text = re.sub(r'[^a-z\s]', '', text)
+    # Remove short words
+    # text = re.sub(r'\b\w{1,2}\b', '', text)
+    # Remove stopwords, including domain-specific ones
+    # text = ' '.join([word for word in text.split() if word not in general_stopwords])
+    # Lemmatize the text
+    text = ' '.join([lemmatizer.lemmatize(word) for word in text.split()])
+    return text
+
+
+def load_data(data_path, drop_duplicates=False):
+    """
+    Load data data_path:str, drop:duplicates:bool
+    returns df['sentence','label'] with preprocessing as done in preprocess_text()
+    """
+    
+    # Open data file in read mode
+    with open(data_path, 'r') as file:
+        # Step 2: Read the content of the file
+        data = file.read().split('\n')
+
+    # Create Pandas DataFrame from the data
+    label = []
+    sentence = []
+    for line in data:
+        if line > '':
+            line = line.split()
+            label.append(line[0])
+            sentence.append(" ".join(line[1:]))
+    df = pd.DataFrame({'sentence': sentence, 'label': label})
+
+        
+    if drop_duplicates == True:
+        df = df.drop_duplicates()
+
+    class_dist = df['label'].value_counts()
+    problematic_classes = class_dist[class_dist == 1].index.tolist()
+    if problematic_classes:
+        print("Class distribution:\n", class_dist)
+        print(f"\nWarning: The following classes have only one sample: {problematic_classes}")
+        print("These will be removed to allow stratification.")
+        df = df[~df['label'].isin(problematic_classes)]
+        print(f"Rows remaining after removal: {len(df)}")
+            
+    #apply the preprocessing done in preprocess_text to the sentence column of the df
+    df['sentence'] = df['sentence'].apply(preprocess_text)
+    
+    
+    label_encoder = LabelEncoder()
+    #transform the labels to numerical values
+    df['numerical_label'] = label_encoder.\
+                                            fit_transform(df['label'])
+
+    return df
+    
+
+
+def bow_descriptors_labels(sentence_label_df, save = False, deduplicated = False):
+
+    #create bow descriptors in sparse form
+    vectorizer = CountVectorizer()
+    X_bow = vectorizer.fit_transform(sentence_label_df["sentence"])
+
+    #save both the duplicated and deduplicated vectorizer
+    if save==True:
+        if deduplicated==False:     
+            dump(vectorizer, 'src/models/vectorizer.joblib')
+        else:
+            dump(vectorizer, 'src/models/vectorizer_deduplicated.joblib' )
+
+    return X_bow, sentence_label_df['numerical_label']
+
+
+
+
+'''
 
 # Get the absolute path of the script
 script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -156,77 +248,4 @@ if __name__ == "__main__":
     print(f"BOW train set shape: {X_train_bow.shape}")
     print(f"BOW test set shape: {X_test.shape}")
 
-
-#### Chris' load data change
-
-nltk.download('wordnet')
-nltk.download('omw-1.4')
-nltk.download('stopwords')
-
-lemmatizer = WordNetLemmatizer()
-
-# general_stopwords = set(stopwords.words('english'))
-
-def preprocess_text(text):
-    # Convert to lowercase
-    text = text.lower()
-    # Remove special characters and numbers
-    text = re.sub(r'[^a-z\s]', '', text)
-    # Remove short words
-    text = re.sub(r'\b\w{1,2}\b', '', text)
-    # Remove stopwords, including domain-specific ones
-    # text = ' '.join([word for word in text.split() if word not in general_stopwords])
-    # Lemmatize the text
-    text = ' '.join([lemmatizer.lemmatize(word) for word in text.split()])
-    return text
-
-
-def load_data(data_path, drop_duplicates=False):
-    """
-    Load data and give option to how to return it: as a pandas DataFrame or Bag of Words (BOW) representation
-    """
-    import pandas as pd
-    
-    # Open data file in read mode
-    with open(data_path, 'r') as file:
-        # Step 2: Read the content of the file
-        data = file.read().split('\n')
-
-    # Create Pandas DataFrame from the data
-    label = []
-    sentence = []
-    for line in data:
-        if line > '':
-            line = line.split()
-            label.append(line[0])
-            sentence.append(" ".join(line[1:]))
-    #### apply preprocessing    
-    df = pd.DataFrame({'sentence': sentence, 'label': label})
-    
-    df['sentence'] = df['sentence'].apply(preprocess_text)
-    
-    if drop_duplicates == True:
-        df = df.drop_duplicates()
-    
-    
-    return df
-    
-df = load_data('data/all_dialogs.txt', drop_duplicates=False)
-print(df)
-
-
-def bow_descriptors_labels(sentence_label_df, save=False):
-
-    label_encoder = LabelEncoder()
-    
-    #transform the labels to numerical values
-    sentence_label_df['numerical_label'] = label_encoder.fit_transform(sentence_label_df['label'])
-
-    #create bow descriptors in sparse form
-    vectorizer = CountVectorizer()
-    X_bow = vectorizer.fit_transform(sentence_label_df["sentence"])
-
-    if save==True:
-        dump(vectorizer, 'models/vectorizer.joblib')
-
-    return X_bow, sentence_label_df['numerical_label']
+'''

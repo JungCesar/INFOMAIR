@@ -1,66 +1,257 @@
+import joblib as jl
+import load_data as ld
+import pandas as pd
+import keyword_mapping as km
+import reasoning as reas
+import pyttsx3
 
-from baseline_majority import baseline_model_majority
-from baseline_keywords import baseline_model_keywords
+sys_configs = {
+    "EARLY_SUGGESTIONS" : False,
+    "USE_LEVENSHTEIN" : True,
+    "ALLOW_CHANGE_PREF" : True,
+    "PRINT_AND_SPEAK" : False
+}
 
 
-# Main function of the restaurant recommendation system
-def main():
+model = jl.load("src/models/svm.joblib")
+vectorizer = jl.load("src/models/vectorizer.joblib")
+restaurant_db = pd.read_csv("./data/updated_restaurant_info.csv")
+preference_categories_dict = km.initiate_category_dict(restaurant_db)
+user_preferences = {
+        "food": None,
+        "pricerange": None, 
+        "area": None
+        }
+additional_preferences = {
+        'romantic' : ['romantic'],
+        'assigned seats' : ['assigned'],
+        'children' : ['children'],
+        'touristic' : ['touristic']
+        }
 
-    # Welcome message
-    print("Welcome to the restaurant recommendation system!")
-    
+def classify_input(input_text):
+    input_text = ld.preprocess_text(input_text)
+    descriptor = vectorizer.transform([input_text])
+    label = model.predict(descriptor)[0]
+    return label
 
-    # Ask for input, until valid input is given
-    while True:
+tts_engine = pyttsx3.init()
 
-        # User input
-        user_input = input(
-            "Which model would you like to use? Type:\n1. 'bl1' for Baseline 1: Majority Class\n2. 'bl2' for Baseline 2: Keyword Matching\n3. 'ml1' for Machine Learning Model 1: Decision Tree Classifier\n4. 'ml2' for Machine Learning Model 2: Logistic Regression\n5. 'exit' to exit\n>"
-        )
+def speak_text(text):
+    tts_engine.say(text)
+    tts_engine.runAndWait()
 
-        # Baseline 1: Majority Class
-        if user_input.lower() == "bl1":
-            print("You chose Baseline 1: Majority Class")
-            
-            while True:
-                user_input = input(">")
-                result = baseline_model_majority(user_input)
-                print(result)
+def print_and_speak(text, speak=True):
+    print(text)
+    if speak==True:      
+        speak_text(text)  
 
-        # Baseline 2: Keyword Matching
-        elif user_input.lower() == "bl2":
-            print("Baseline 2: Keyword Matching")
-            while True:
-                user_input = input(">")
-                result = baseline_model_keywords(user_input)
-                print(result)
 
-        # Machine Learning Model 1: Decision Tree Classifier
-        elif user_input.lower() == "ml1":
-            print("Machine Learning Model 1: Decision Tree Classifier")
-            break
+def ask_preference(category, addition = "", speak=True): 
+    print_and_speak( addition + "What type of " + category + " would you like? Please type 'any' if you have no particular preference.", speak)
+    text = input().lower()
+    if text == "any":
+        return "any"
+    label = classify_input(text)
+    while label != 6:
+        print_and_speak("Please, specify the type of " + category + " that you would prefer.", speak)
+        text = input().lower()
+        if text == "any":
+            return "any"
+        label = classify_input(text)
+    return text
 
-        # Machine Learning Model 2: Support Vector Machine
-        elif user_input.lower() == "ml2":
-            print("Machine Learning Model 2: Support Vector Machine")
-            break
+def update_preferences(text, configurations):
+    instance_preferences = km.extract_preferences(text, preference_categories_dict, configurations["USE_LEVENSHTEIN"])
+    if all(value is None for value in instance_preferences.values()):
+        return ""
+    expressed_preference = ""
+    for category, value in instance_preferences.items():
+        if configurations["ALLOW_CHANGE_PREF"]:  
+            if value is not None:
+                user_preferences[category] = value
+                expressed_preference += f"You specified that you want the restaurant to be {value}. "
+        else: 
+            if value is not None and user_preferences[category] is None:
+                user_preferences[category] = value
+                expressed_preference += f"You specified that you want the restaurant to be {value}. "
 
-        # Machine Learning Model 3: Logistic Regression
-        elif user_input.lower() == "ml3":
-            print("Machine Learning Model 3: Logistic Regression")
-            break
+    return expressed_preference
 
-        # Exit
-        elif user_input.lower() == "exit":
-            exit()
 
-        # Invalid input
+def is_category_filled(key):
+    return bool(user_preferences.get(key))
+
+
+def give_suggestion(subset, backup_subset, inferred_reason, speak, additional_preferences= {}): 
+    additional_preferences_provided = any(additional_preferences.values())
+    if subset is None or subset.empty:
+        if backup_subset is not None and not backup_subset.empty:
+            name = backup_subset["restaurantname"].iloc[0] 
+            if additional_preferences_provided:
+                print_and_speak( "No restaurants match the given additional preferences. \
+                    We will attempt to relax the additional preferences and suggest a restaurant without them.", speak)
+            print_and_speak( "I would like to propose " + name +". It has "+ backup_subset["food"].iloc[0]\
+                + " food, "+ backup_subset["pricerange"].iloc[0] +" prices and is located in the "+ backup_subset["area"].iloc[0] + ".", speak)
         else:
-            print(
-                "Invalid input. Please try again, type: 'bl1', 'bl2', 'ml1', 'ml2' or 'exit'"
-            )
+            print_and_speak( "No restaurants matched with your search, even disregarding the additional restaurants.", speak)
+            return False, None
+    else:    
+        name = subset["restaurantname"].iloc[0] 
+        print_and_speak( "I would like to propose " + name +". It has "+ subset["food"].iloc[0]\
+            + " food, "+ subset["pricerange"].iloc[0] +" prices and is located in the "+ subset["area"].iloc[0] + ". " + inferred_reason, speak)
+        
+    print_and_speak( "Are you okay with the aforementioned suggestion?", speak)
+    text = input().lower()
+    label = classify_input(text)
+    if label in [4, 7, 13]:
+        agreement = False
+    else: 
+        agreement = True
+    return agreement, name
+
+def confirm_preferences(configurations): 
+    recap_string = "You have selected: \n"
+    if user_preferences["food"]:
+        recap_string+= "-" + user_preferences["food"] + " food. \n"
+    if user_preferences["pricerange"]:
+        recap_string += "-" + user_preferences["pricerange"]+ " prices.\n"
+    if user_preferences["area"]:
+        recap_string += "-location in the " + user_preferences["area"]+ "."
+    speak=  configurations["PRINT_AND_SPEAK"]
+    print_and_speak(recap_string, speak)
+    if configurations['ALLOW_CHANGE_PREF'] == True:
+        print_and_speak( "Would you like to change any of them? Please state them now, or we will move on.", speak)
+        text= input().lower()
+        label = classify_input(text)
+        if label == 6:
+            changed_preference = update_preferences(text, configurations)
+            print_and_speak( changed_preference, speak)
+        
+def offer_early_suggestions(user_preferences, restaurant_db ,configurations):
+    if configurations['EARLY_SUGGESTIONS'] == True and \
+            any(value not in [None, "any"] for value in user_preferences.values()):
+        
+        restaurant_subset = km.query_restaurant(user_preferences, restaurant_db, output='df', version='eq')
+        agreement, restaurant_name = give_suggestion(restaurant_subset, restaurant_subset, "", configurations["PRINT_AND_SPEAK"])
+        if agreement:
+            print_and_speak( "I hope you enjoy your time in " + restaurant_name, configurations['PRINT_AND_SPEAK'])
+            return True, restaurant_db 
+        
+        
+        restaurant_db = restaurant_db[restaurant_db['restaurantname'] != restaurant_name]
+    return False, restaurant_db
 
 
-# Entry point of the program
+def state_transition_function(configurations):
+    #reload restaurant db, for restarts and the case that in early_suggestions, restaurants have been poped out
+    restaurant_db = pd.read_csv("./data/updated_restaurant_info.csv")
+    speak= configurations['PRINT_AND_SPEAK']
+    #greet
+    print_and_speak( "Hello, welcome to restaurant recommender!", speak)
+    #get response and classify it
+    text = input().lower()
+    label = classify_input(text)
+    if label != 6:
+        text = ask_preference("food", "", speak)
+    
+    if text == "any":
+        user_preferences["food"] = "any"
+        print_and_speak( "You indicated that you have no particular preference for food type.", speak)
+    expressed_preference = update_preferences(text, configurations)
+
+    #we go from category to category until they are filled (any)
+    while not is_category_filled("food") :
+        text = ask_preference("food", addition = expressed_preference + "I would like to know your food type preference. ", speak=speak)
+        if text == "any":
+            user_preferences["food"] = "any"
+            print_and_speak( "You indicated that you have no particular preference for food type.", speak)
+            break
+        expressed_preference = update_preferences(text, configurations)
+
+    early_agreement, restaurant_db = offer_early_suggestions(user_preferences, restaurant_db, configurations)
+    if early_agreement == True:
+        return
+        
+    while not is_category_filled("pricerange"):
+        text = ask_preference("pricerange", addition = expressed_preference + "I would also like to know if you want the restaurant to be cheap, moderate, or expensive. ", speak=speak)
+        if text == "any":
+            user_preferences["pricerange"] = "any"
+            print_and_speak( "You indicated that you have no particular preference for price range.", speak)
+            break
+        expressed_preference = update_preferences(text, configurations)
+
+
+    early_agreement, restaurant_db = offer_early_suggestions(user_preferences, restaurant_db, configurations)
+    if early_agreement == True:
+        return
+        
+        
+    while not is_category_filled("area") :
+        text = ask_preference("area", addition = expressed_preference + " Would you like the restaurant to be in the north, south, center, east or west? ", speak=speak)
+        if text == "any":
+            user_preferences["area"] = "any"
+            print_and_speak( "You indicated that you have no particular preference for the location.", speak)
+            break
+        expressed_preference = update_preferences(text, configurations)
+    
+    early_agreement, restaurant_db = offer_early_suggestions(user_preferences, restaurant_db, configurations)
+    if early_agreement == True:
+        return
+        
+    confirm_preferences(configurations)
+
+    #now we ask for additional requirements
+    print_and_speak( "Do you have any additional requirements, such as assigned seating, a romantic atomsphere, a touristic place or a children friendly environment?", speak)
+    text = input().lower()
+    label= classify_input(text)
+
+    if label in [4, 7, 13] or text in ["none", "no", "any"]:
+        print_and_speak( "You indicated that you have no additional preferences.",speak)
+        selected_added_pref = {}
+        filters_true, filters_false, inferred_reason= {}, {}, "" 
+    else:    
+        selected_added_pref = km.extract_preferences(text, additional_preferences, configurations["USE_LEVENSHTEIN"])
+
+        if any(selected_added_pref.values()):  
+            filters_true, filters_false, inferred_reason = reas.inference_rules(selected_added_pref)
+        else:
+            while True:
+                print_and_speak( "No valid preferences were found. Please specify the additional requirements. Or type 'any' to move on.", speak)
+                text = input().lower()
+                if text == "any":
+                    filters_true, filters_false, inferred_reason = {}, {}, ''
+                    break  
+
+                selected_added_pref = km.extract_preferences(text, additional_preferences, configurations["USE_LEVENSHTEIN"])
+                if any(selected_added_pref.values()):  
+                    filters_true, filters_false, inferred_reason = reas.inference_rules(selected_added_pref)
+                    break
+
+    #user preferences query
+    restaurant_subset_1 = km.query_restaurant(user_preferences, restaurant_db, output = 'df', version ='eq')
+    #additional preferences - equality filter
+    restaurant_subset = km.query_restaurant(filters_true, restaurant_subset_1, output = 'df', version ='eq')
+    #additional preferences - inequality filter
+    restaurant_subset= km.query_restaurant(filters_false, restaurant_subset, output = 'df', version ='ineq')
+
+    agreement, restaurant_name = give_suggestion(restaurant_subset, restaurant_subset_1, inferred_reason, speak, filters_true|filters_false)
+
+    if agreement==True:
+        print_and_speak( "I hope you enjoy your time in " + restaurant_name, speak)
+    else:
+        print_and_speak( "Okay, we will then restart the recommendation procedure. ", speak)    
+        user_preferences.update({
+        "food": None,
+        "pricerange": None, 
+        "area": None
+        })
+        state_transition_function(configurations)
+
+
+
+def main(configurations):
+    state_transition_function(configurations)
+
 if __name__ == "__main__":
-    main()
+    main(sys_configs)
