@@ -76,14 +76,14 @@ def classfier(choice, X_train, y_train, X_test, y_test, metrics = True, save_mod
         # plt.show()
 
     if save_model == True:
-        joblib.dump(classifier, 'src/models/' + choice + '.joblib')
+        joblib.dump(classifier, 'models/' + choice + '.joblib')
 
     return classifier
 
 
 for drop_duplicates in [False, True]:
     #first, loop for duplicated or not and get the dataframe of the sentence/label and the descriptors 
-        sentence_label_df = load_data('./data/dialog_acts.dat', drop_duplicates=drop_duplicates)
+        sentence_label_df = load_data('../data/dialog_acts.dat', drop_duplicates=drop_duplicates)
         X, y = bow_descriptors_labels(sentence_label_df, deduplicated=drop_duplicates, save = True)
         X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.20, random_state=1, stratify=y)
 

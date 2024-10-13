@@ -92,9 +92,9 @@ def bow_descriptors_labels(sentence_label_df, save = False, deduplicated = False
     #save both the duplicated and deduplicated vectorizer
     if save==True:
         if deduplicated==False:     
-            dump(vectorizer, 'src/models/vectorizer.joblib')
+            dump(vectorizer, 'models/vectorizer.joblib')
         else:
-            dump(vectorizer, 'src/models/vectorizer_deduplicated.joblib' )
+            dump(vectorizer, 'models/vectorizer_deduplicated.joblib' )
 
     return X_bow, sentence_label_df['numerical_label']
 

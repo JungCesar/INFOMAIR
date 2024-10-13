@@ -4,18 +4,22 @@ import pandas as pd
 import keyword_mapping as km
 import reasoning as reas
 import pyttsx3
+import os
+import keyboard
+import threading
+import time
 
 sys_configs = {
     "EARLY_SUGGESTIONS" : False,
     "USE_LEVENSHTEIN" : True,
     "ALLOW_CHANGE_PREF" : True,
-    "PRINT_AND_SPEAK" : False
+    "PRINT_AND_SPEAK" : True
 }
 
-
-model = jl.load("src/models/svm.joblib")
-vectorizer = jl.load("src/models/vectorizer.joblib")
-restaurant_db = pd.read_csv("./data/updated_restaurant_info.csv")
+print(os.getcwd())
+model = jl.load("models/svm.joblib")
+vectorizer = jl.load("models/vectorizer.joblib")
+restaurant_db = pd.read_csv("../data/updated_restaurant_info.csv")
 preference_categories_dict = km.initiate_category_dict(restaurant_db)
 user_preferences = {
         "food": None,
@@ -35,17 +39,51 @@ def classify_input(input_text):
     label = model.predict(descriptor)[0]
     return label
 
-tts_engine = pyttsx3.init()
+#tts_engine = pyttsx3.init()
+#def print_speak_thread():
+threads = []
+
+
+def stop_speach(engine):
+    #print("process has started")
+    start_time = time.time()
+    while True:
+        if keyboard.is_pressed('enter'):
+            #print("enter is pressed")
+            if engine.isBusy():  
+                engine.stop()
+                break
+        elapsed_time = time.time() - start_time
+        if elapsed_time > 5:
+            break
 
 def speak_text(text):
+    tts_engine = pyttsx3.init()
+    stop_thread = threading.Thread(target=stop_speach, args = (tts_engine,))    
+    stop_thread.daemon = False  # This ensures the thread will close when the main program exits
+    stop_thread.start()
+    threads.append(stop_thread)
+    if stop_thread.is_alive():
+        print("Thread is alive")
     tts_engine.say(text)
+    
+    
     tts_engine.runAndWait()
+    stop_thread.join()
+    
+
+   
 
 def print_and_speak(text, speak=True):
+    
     print(text)
-    if speak==True:      
-        speak_text(text)  
+    
 
+    if speak==True:
+        
+        speak_text(text)
+   
+        
 
 def ask_preference(category, addition = "", speak=True): 
     print_and_speak( addition + "What type of " + category + " would you like? Please type 'any' if you have no particular preference.", speak)
@@ -145,10 +183,14 @@ def offer_early_suggestions(user_preferences, restaurant_db ,configurations):
 
 def state_transition_function(configurations):
     #reload restaurant db, for restarts and the case that in early_suggestions, restaurants have been poped out
-    restaurant_db = pd.read_csv("./data/updated_restaurant_info.csv")
+    restaurant_db = pd.read_csv("../data/updated_restaurant_info.csv")
     speak= configurations['PRINT_AND_SPEAK']
     #greet
+    #stop_thread_ = stop_thread()
+    
     print_and_speak( "Hello, welcome to restaurant recommender!", speak)
+    #stop_thread_.join()
+
     #get response and classify it
     text = input().lower()
     label = classify_input(text)
@@ -251,7 +293,8 @@ def state_transition_function(configurations):
 
 
 def main(configurations):
+    
     state_transition_function(configurations)
-
+    
 if __name__ == "__main__":
     main(sys_configs)
