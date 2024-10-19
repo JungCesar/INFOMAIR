@@ -92,7 +92,14 @@ def query_restaurant(preferences, restaurant_info_df, output = 'list', version =
         else:
             return restaurant_info_df  # Return full dataframe if no filters
 
+<<<<<<< HEAD
+restaurant_database = pd.read_csv("../data/restaurant_info.csv")
+preference_categories_dict = initiate_category_dict(restaurant_database)
+preferences_list = extract_preferences("want italian food in the south ", preference_categories_dict)
+print(query_restaurant(preferences_list, restaurant_database))
+=======
 # restaurant_database = pd.read_csv("data/restaurant_info.csv")
 # preference_categories_dict = initiate_category_dict(restaurant_database)
 # preferences_list = extract_preferences("want italian food in the south ", preference_categories_dict)
 # print(query_restaurant(preferences_list, restaurant_database))
+>>>>>>> 3fca223b2d207f8524646fc7a53ff9daeab88b9d
