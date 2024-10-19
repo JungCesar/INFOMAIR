@@ -1,7 +1,7 @@
 # INFOMAIR
 GitHub Repository for INFOMAIR: Methods in Artificial Intelligence Research Course at Utrecht University (UU) Group 17
 
-By Christos Loannidis, Jort Koedijk, Luc Minnee and Julius Bijkerk
+By Christos Ioannidis, Jort Koedijk, Luc Minnee and Julius Bijkerk
 
 
 1. In the data folder all the datasets exist, included the restaurant dataframe after the additional columns.

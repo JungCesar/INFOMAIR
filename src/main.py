@@ -166,12 +166,9 @@ def give_suggestion(subset, backup_subset, inferred_reason, speak, additional_pr
             if label in [4, 7, 13]:  # User rejects the restaurant
                 continue  # Move to the next suggestion
             else:  # User accepts the suggestion
-                return True, name, i + 1
-        # name = subset["restaurantname"].iloc[0] 
-        # print_and_speak( "I would like to propose " + name +". It has "+ subset["food"].iloc[0]\
-        #     + " food, "+ subset["pricerange"].iloc[0] +" prices and is located in the "+ subset["area"].iloc[0] + ". " +
-        #     inferred_reason, speak)
-        
+                return True, name, i + 1 
+            
+            
     print_and_speak( "Are you okay with the aforementioned suggestion?", speak)
     text = input().lower()
     label = classify_input(text)
