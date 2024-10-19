@@ -61,7 +61,7 @@ def extract_preferences(inform_text, preference_categories_dict, use_lev =True):
 
 
 
-def query_restaurant(preferences, resaurant_info_df, output = 'list', version ='eq'):
+def query_restaurant(preferences, restaurant_info_df, output = 'list', version ='eq'):
 
     '''
     lookup to the database for the criteria extracted
@@ -69,20 +69,28 @@ def query_restaurant(preferences, resaurant_info_df, output = 'list', version ='
     preferenfes: dict, key: column name, value: the value for that feature in the df
     restaurant_info_df: df, with filters either applied or not
     '''
-    if version == 'eq': #equality filter
-        query_string = ' & '.join([f"{key} == '{value}'" for key, value in preferences.items() if value and value != "any"])
-    else: #inequality filter
-        query_string = ' & '.join([f"{key} != '{value}'" for key, value in preferences.items() if value and value != "any"])
-    
-    if query_string:
-        if output=='list':
-            return (resaurant_info_df.query(query_string))['restaurantname'].tolist()
-        else:
-            return resaurant_info_df.query(query_string)            
-    else:
-        if output=='list':
-            return resaurant_info_df['restaurantname'].tolist()
+    # Build the query string dynamically, excluding "any" values
+    query_conditions = []
+    for key, value in preferences.items():
+        if value and value != "any":  # Ignore "any" values in the query
+            if version == 'eq':
+                query_conditions.append(f"{key} == '{value}'")
+            elif version == 'ineq':
+                query_conditions.append(f"{key} != '{value}'")
 
+    query_string = ' & '.join(query_conditions)
+
+    # Perform the query only if there's something to filter
+    if query_string:
+        if output == 'list':
+            return restaurant_info_df.query(query_string)['restaurantname'].tolist()
+        else:
+            return restaurant_info_df.query(query_string)
+    else:
+        if output == 'list':
+            return restaurant_info_df['restaurantname'].tolist()  # Return all restaurants if no query filters
+        else:
+            return restaurant_info_df  # Return full dataframe if no filters
 
 # restaurant_database = pd.read_csv("data/restaurant_info.csv")
 # preference_categories_dict = initiate_category_dict(restaurant_database)
