@@ -20,12 +20,8 @@ added_features = {
     "length_of_stay": ["short stay", "long stay"]
 }
 
-<<<<<<< HEAD
-update_restaurant_info(added_features, '../data/restaurant_info.csv')
-=======
 update_restaurant_info(added_features, 'data/restaurant_info.csv')
 '''
->>>>>>> 3fca223b2d207f8524646fc7a53ff9daeab88b9d
 
 # additional_preferences = {
 #  'romantic' : ['romantic'],
@@ -59,19 +55,9 @@ def inference_rules(add_preferences):
         filters_false['crowdedness'] = 'busy'
         reason += "It is romantic because it is ideal for long stay and it is not busy. "    
     return filters_true, filters_false, reason
-
-<<<<<<< HEAD
-filters_true, filters_false= inference_rules(selected_added_pref)
-
-
-restaurant_df=pd.read_csv('../data/updated_restaurant_info.csv')
-# print(restaurant_df.columns)
-restaurant_df = query_restaurant(filters_true, restaurant_df, output = 'df', version ='eq')
-print(query_restaurant(filters_false, restaurant_df, output = 'list', version ='ineq'))
-=======
+ 
 # filters_true, filters_false= inference_rules(selected_added_pref)
 # restaurant_df=pd.read_csv('data/updated_restaurant_info.csv')
 # # print(restaurant_df.columns)
 # restaurant_df = query_restaurant(filters_true, restaurant_df, output = 'df', version ='eq')
-# print(query_restaurant(filters_false, restaurant_df, output = 'list', version ='ineq'))
->>>>>>> 3fca223b2d207f8524646fc7a53ff9daeab88b9d
+# print(query_restaurant(filters_false, restaurant_df, output = 'list', version ='ineq')) 

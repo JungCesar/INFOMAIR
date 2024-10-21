@@ -164,9 +164,11 @@ def give_suggestion(subset, backup_subset, inferred_reason, speak, additional_pr
             label = classify_input(text)
             
             if label in [4, 7, 13]:  # User rejects the restaurant
-                continue  # Move to the next suggestion
+                continue
             else:  # User accepts the suggestion
                 return True, name, i + 1 
+        return False, None, -1
+        
             
             
     print_and_speak( "Are you okay with the aforementioned suggestion?", speak)
@@ -315,7 +317,17 @@ def state_transition_function(configurations):
 
     next_index=0
     while next_index!=-1:
-        agreement, restaurant_name, next_index = give_suggestion(restaurant_subset, restaurant_subset_1, inferred_reason, speak, filters_true)
+        try:
+            agreement, restaurant_name, next_index = give_suggestion(restaurant_subset, restaurant_subset_1, inferred_reason, speak, filters_true)
+        except Exception:
+            print_and_speak( "Okay, we will then restart the recommendation procedure. ", speak) 
+            #the preferences are now resetted, and we have a recursion   
+            user_preferences.update({
+            "food": None,
+            "pricerange": None, 
+            "area": None
+            })
+            state_transition_function(configurations)
         if agreement:
             print_and_speak( "I hope you enjoy your time in " + restaurant_name, speak)
             return
